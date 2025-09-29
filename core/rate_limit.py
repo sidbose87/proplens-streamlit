@@ -2,11 +2,22 @@ import time
 import urllib.parse
 import requests
 from typing import Optional, Tuple
-from robotexclusionrulesparser import RobotExclusionRulesParser
+
+# Prefer stdlib robots, fall back to third-party if installed
+try:
+    import urllib.robotparser as _urob
+    _HAS_STDLIB_ROBOTS = True
+except Exception:
+    _HAS_STDLIB_ROBOTS = False
+
+# try:
+#     from robotexclusionrulesparser import RobotExclusionRulesParser as _ThirdPartyRobots
+# except Exception:
+#     _ThirdPartyRobots = None
 
 # Simple per-host backoff and robots cache
 _last_call: dict[str, float] = {}
-_robots_cache: dict[str, RobotExclusionRulesParser] = {}
+_robots_cache: dict[str, object] = {}  # RobotFileParser or third-party parser
 _content_cache: dict[str, tuple[float, requests.Response]] = {}
 
 UA = {"User-Agent": "PropLens/0.1 (+https://example.com)"}
@@ -26,16 +37,34 @@ def robots_allowed(url: str, ua: str = UA["User-Agent"]) -> bool:
     if not rules:
         try:
             resp = requests.get(base, headers=UA, timeout=10)
-            if resp.status_code >= 400:
-                # If robots not present, default to allow
+            # Default allow if robots.txt is missing or not readable
+            if resp.status_code >= 400 or not resp.text.strip():
                 return True
-            rules = RobotExclusionRulesParser()
-            rules.parse(resp.text)
+
+            if _HAS_STDLIB_ROBOTS:
+                rp = _urob.RobotFileParser()
+                # RobotFileParser.parse expects an iterable of lines
+                rp.parse(resp.text.splitlines())
+                rules = rp
+            elif _ThirdPartyRobots is not None:
+                rp = _ThirdPartyRobots()
+                rp.parse(resp.text)
+                rules = rp
+            else:
+                return True
+
             _robots_cache[host] = rules
         except Exception:
             return True
+
     try:
-        return rules.is_allowed(ua, url)
+        # stdlib
+        if _HAS_STDLIB_ROBOTS and hasattr(rules, "can_fetch"):
+            return rules.can_fetch(ua, url)
+        # third-party
+        if _ThirdPartyRobots is not None and hasattr(rules, "is_allowed"):
+            return rules.is_allowed(ua, url)
+        return True
     except Exception:
         return True
 
