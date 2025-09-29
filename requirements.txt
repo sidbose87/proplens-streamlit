@@ -3,6 +3,6 @@ pydantic
 requests
 beautifulsoup4
 lxml
-python-robotexclusionrulesparser
+robotexclusionrulesparser
 reportlab
 pytest
