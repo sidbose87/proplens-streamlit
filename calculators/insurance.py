@@ -1,7 +1,7 @@
 import json
 import os
 
-DATA = os.path.join(os.path.dirname(__file__), "..", "data", "insurance_cost_per_sqm.json")
+DATA = os.path.join(os.path.dirname(__file__), "..", "data", "stamp_duty_rules", "insurance_cost_per_sqm.json")
 with open(os.path.abspath(DATA), "r", encoding="utf-8") as f:
     COSTS = json.load(f)
 
