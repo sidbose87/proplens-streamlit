@@ -1,0 +1,11 @@
+{
+  "bands": [
+    {"low": 0, "high": 14000, "rate": 0.0125, "base": 0},
+    {"low": 14000, "high": 32000, "rate": 0.015, "base": 175},
+    {"low": 32000, "high": 85000, "rate": 0.0175, "base": 415},
+    {"low": 85000, "high": 316000, "rate": 0.035, "base": 1470},
+    {"low": 316000, "high": 1050000, "rate": 0.045, "base": 10090},
+    {"low": 1050000, "high": null, "rate": 0.055, "base": 41790}
+  ],
+  "owner_occ_discount_pct": 0.0
+}
